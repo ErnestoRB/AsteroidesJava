@@ -22,6 +22,8 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
     int numShots;
     boolean shooting;
     Ovni ovni = new Ovni(100,100);
+    Shot[] ovniShots;
+    int numOvniShots;
 
     Asteroid[] asteroids; //the array of asteroids
     int numAsteroids; //the number of asteroids currently in the array
@@ -37,6 +39,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         //since at most one shot can be fired per frame,
         //there will never be more than 41 shots if each one only
         //lives for 40 frames.
+        ovniShots = new Shot[41];
 
         numAsteroids = 0;
         level = 0; //will be incremented to 1 when first level is set up
@@ -89,6 +92,8 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         g.fillRect(0, 0, 500, 500);
         for (int i = 0; i < numShots; i++) //draw all the shots on the screen
             shots[i].draw(g);
+        for (int i = 0; i < numOvniShots; i++) //draw all the shots on the screen
+            ovniShots[i].draw(g);
         for (int i = 0; i < numAsteroids; i++)
             asteroids[i].draw(g);
         ship.draw(g); //draw the ship
@@ -131,8 +136,23 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
                         // the shot shifted up is not skipped
                     }
                 }
+                
+                for (int i = 0; i < numOvniShots; i++) {
+                    ovniShots[i].move(dim.width, dim.height);
+                    //removes shot if it has gone for too long
+                    //without hitting anything
+                    if (ovniShots[i].getLifeLeft() <= 0) {
+                        //shifts all the next shots up one
+                        deleteOvniShot(i);
+                        i--;
+                    }
+                }
+                
                 if(ovni != null) {
                     ovni.move(dim.width, dim.height);
+                
+                    ovniShots[numOvniShots] = ovni.shoot();
+                    numOvniShots++;       
                 }
                 //move asteroids and check for collisions
                 updateAsteroids();
@@ -140,7 +160,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
                 if (shooting && ship.canShoot()) {
                     //add a shot on to the array
                     shots[numShots] = ship.shoot();
-                    numShots++;
+                    numShots++;   
                 }
 
                 if(score > 99990) {
@@ -164,6 +184,14 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         for (int i = index; i < numShots; i++)
             shots[i] = shots[i + 1];
         shots[numShots] = null;
+    }
+    
+    private void deleteOvniShot(int index) {
+        //delete shot and move all shots after it up in the array
+        numOvniShots--;
+        for (int i = index; i < numOvniShots; i++)
+            ovniShots[i] = ovniShots[i + 1];
+        ovniShots[numOvniShots] = null;
     }
 
     private void deleteAsteroid(int index) {
@@ -220,7 +248,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
                     deleteAsteroid(i);
                     j = numShots; //break out of inner loop - it has
                     //already been hit, don't need to check
-//for collision with other shots
+                    //for collision with other shots
                     i--; //don't skip asteroid shifted back into
                     //the deleted asteroid's position
                 }

@@ -8,6 +8,7 @@ public class Ovni extends Positionable implements Drawable {
 
     private final double minVelocity = 1;
     private final double maxVelocity = 3;
+    double angle;
 
     private class OvniVelocityChange implements Runnable {
 
@@ -23,6 +24,7 @@ public class Ovni extends Positionable implements Drawable {
 
     public Ovni(double x, double y) {
         super(x, y, 0, 0);
+        this.angle = 45; //angulo de ejemplo
         new ScheduledThreadPoolExecutor(1).scheduleAtFixedRate(new OvniVelocityChange(), 0, 2000, TimeUnit.MILLISECONDS);
         // esta línea genera un hilo cada 2s que genera una nueva velocidad (sentido y magnitud)
     }
@@ -32,6 +34,7 @@ public class Ovni extends Positionable implements Drawable {
         g.fillOval((int)x - 20, (int)y - 10, 40, 20);
         g.setColor(Color.cyan);
         g.fillArc((int)x - 10, (int)y - 19, 20, 20, 0, 180);
+        
     }
 
     @Override
@@ -49,4 +52,9 @@ public class Ovni extends Positionable implements Drawable {
             y = 0;
 
     }
+    
+    public Shot shoot() {
+        return new Shot(x, y, angle, xVelocity, yVelocity, 40);
+    }
+    
 }
