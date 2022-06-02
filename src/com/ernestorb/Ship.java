@@ -2,12 +2,12 @@ package com.ernestorb;
 
 import java.awt.*;
 
-public class Ship {
+public class Ship extends Positionable implements Drawable {
     final double[] origXPts = {14, -10, -6, -10}, origYPts = {0, -8, 0, 8},
             origFlameXPts = {-6, -23, -6}, origFlameYPts = {-3, 0, 3};
     final int radius = 6;
 
-    double x, y, angle, xVelocity, yVelocity, acceleration,
+    double angle, acceleration,
             velocityDecay, rotationalSpeed;
     boolean turningLeft, turningRight, accelerating, active;
     int[] xPts, yPts, flameXPts, flameYPts;
@@ -16,6 +16,7 @@ public class Ship {
     public Ship(double x, double y, double angle, double acceleration,
                 double velocityDecay, double rotationalSpeed,
                 int shotDelay) {
+        super(x, y, 0,0);
         //this.x refers to the Ship's x, x refers to the x parameter
         this.x = x;
         this.y = y;

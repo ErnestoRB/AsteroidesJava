@@ -1,12 +1,13 @@
 package com.ernestorb;
 
 import java.awt.*;
-public class Asteroid {
-    double x, y, xVelocity, yVelocity, radius;
+public class Asteroid extends Positionable implements Drawable {
+    double radius;
     int hitsLeft, numSplit;
 
     public Asteroid(double x,double y,double radius,double minVelocity,
                     double maxVelocity,int hitsLeft,int numSplit){
+        super(x, y, 0,0);
         this.x=x;
         this.y=y;
         this.radius=radius;
@@ -67,18 +68,14 @@ public class Asteroid {
         // then they have collided.
         // It does not check for collisions if the ship is not active
         // (player is waiting to start a new life or the game is paused).
-        if(Math.pow(radius+ship.getRadius(),2) >
-                Math.pow(ship.getX()-x,2) + Math.pow(ship.getY()-y,2)
-                && ship.isActive())
-            return true;
-        return false;
+        return Math.pow(radius + ship.getRadius(), 2) >
+                Math.pow(ship.getX() - x, 2) + Math.pow(ship.getY() - y, 2)
+                && ship.isActive();
     }
     public boolean shotCollision(Shot shot){
         // Same idea as shipCollision, but using shotRadius = 0
-        if(Math.pow(radius,2) > Math.pow(shot.getX()-x,2)+
-                Math.pow(shot.getY()-y,2))
-            return true;
-        return false;
+        return Math.pow(radius, 2) > Math.pow(shot.getX() - x, 2) +
+                Math.pow(shot.getY() - y, 2);
     }
 
     public int getHitsLeft(){

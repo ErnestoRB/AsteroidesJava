@@ -2,13 +2,13 @@ package com.ernestorb;
 
 import java.awt.*;
 
-public class Shot {
+public class Shot extends Positionable implements  Drawable {
     final double shotSpeed = 12;
-    double x, y, xVelocity, yVelocity;
     int lifeLeft;
 
     public Shot(double x, double y, double angle, double shipXVel,
                 double shipYVel, int lifeLeft) {
+        super(x, y, 0,0);
         this.x = x;
         this.y = y;
         // add the velocity of the ship to the velocity the shot velocity

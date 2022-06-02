@@ -21,6 +21,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
     Shot[] shots;
     int numShots;
     boolean shooting;
+    Ovni ovni = new Ovni(100,100);
 
     Asteroid[] asteroids; //the array of asteroids
     int numAsteroids; //the number of asteroids currently in the array
@@ -102,6 +103,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         g.drawString("Level " + level, 20, 20);
         g.setColor(Color.green);
         g.drawString("Score " + score, 20, 40);
+        ovni.draw(g);
     }
 
 
@@ -128,6 +130,9 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
                         i--; // move the outer loop back one so
                         // the shot shifted up is not skipped
                     }
+                }
+                if(ovni != null) {
+                    ovni.move(dim.width, dim.height);
                 }
                 //move asteroids and check for collisions
                 updateAsteroids();
