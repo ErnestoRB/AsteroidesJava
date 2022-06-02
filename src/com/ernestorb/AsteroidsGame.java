@@ -3,8 +3,12 @@ package com.ernestorb;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
 
 public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
+
+    private long score = 0;
 
     JFrame ventana;
     Thread thread;
@@ -67,9 +71,9 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         //the split asteroids are created first, then the original
         //one is deleted). The level number is equal to the
         //number of asteroids at it's start.
-        asteroids = new Asteroid[level *
+        numAsteroids = 4 + 2*(level-1); // SIEMPRE se aparecen 4 y 2 cada nivel
+        asteroids = new Asteroid[numAsteroids *
                 (int) Math.pow(astNumSplit, astNumHits - 1) + 1];
-        numAsteroids = level;
         //create asteroids in random spots on the screen
         for (int i = 0; i < numAsteroids; i++)
             asteroids[i] = new Asteroid(Math.random() * dim.width,
@@ -88,7 +92,16 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
             asteroids[i].draw(g);
         ship.draw(g); //draw the ship
         g.setColor(Color.cyan); //Display level number in top left corner
+        try {
+            g.setFont(Font.createFont(Font.TRUETYPE_FONT,new File("src/PressStart2P-Regular.ttf")).deriveFont(12.0F));
+        } catch (FontFormatException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         g.drawString("Level " + level, 20, 20);
+        g.setColor(Color.green);
+        g.drawString("Score " + score, 20, 40);
     }
 
 
@@ -123,6 +136,10 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
                     //add a shot on to the array
                     shots[numShots] = ship.shoot();
                     numShots++;
+                }
+
+                if(score > 99990) {
+                    score -= 99990;
                 }
             }
 
@@ -173,6 +190,18 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
             for (int j = 0; j < numShots; j++) {
                 if (asteroids[i].shotCollision(shots[j])) {
                     //if the shot hit an asteroid, delete the shot
+
+                    switch (asteroids[i].hitsLeft){
+                        case 1:
+                            score += 100;
+                            break;
+                        case 2:
+                            score += 50;
+                            break;
+                        case 3:
+                            score += 20;
+                            break;
+                    }
                     deleteShot(j);
                     //split the asteroid up if needed
                     if (asteroids[i].getHitsLeft() > 1) {
