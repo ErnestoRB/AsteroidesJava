@@ -4,7 +4,8 @@ import java.awt.*;
 
 public class Shot extends Positionable implements  Drawable {
     final double shotSpeed = 12;
-    int lifeLeft;
+    int lifeLeft, tipo; //tipo define las balas a dibujar: si son de la nave, seran amarillas, si son del ovni, seran rojas 
+                        //y un poco mas grandes
 
     public Shot(double x, double y, double angle, double shipXVel,
                 double shipYVel, int lifeLeft) {
@@ -36,10 +37,16 @@ public class Shot extends Positionable implements  Drawable {
     }
 
     public void draw(Graphics g) {
-        g.setColor(Color.yellow); //set shot color
-        //draw circle of radius 3 centered at the closest point
-        //with integer coordinates (.5 added to x-1 and y-1 for rounding)
-        g.fillOval((int) (x - .5), (int) (y - .5), 3, 3);
+        if(tipo == 1){
+            g.setColor(Color.yellow); //set shot color
+            //draw circle of radius 3 centered at the closest point
+            //with integer coordinates (.5 added to x-1 and y-1 for rounding)
+            g.fillOval((int) (x - .5), (int) (y - .5), 3, 3);
+        }
+        if(tipo == 0){
+            g.setColor(Color.red);
+            g.fillOval((int) (x - .5), (int) (y - .5), 5, 5);
+        }
     }
 
     public double getX() {
@@ -53,5 +60,15 @@ public class Shot extends Positionable implements  Drawable {
     public int getLifeLeft() {
         return lifeLeft;
     }
+
+    public int getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(int tipo) {
+        this.tipo = tipo;
+    }
+    
+    
 }
 
