@@ -7,11 +7,13 @@ import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
 
-    private long score = 0;
+    private int currentScore = 0;
 
     JFrame ventana;
     Thread thread;
@@ -25,9 +27,10 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
     boolean shooting;
     Ovni ovni = new Ovni(100, 100, 25); //el tercer argumento indica el delay entre cada disparo de bala
     Vector<Shot> shots;
+    Vector<Asteroid> asteroids;
+    Map<Integer, Integer> scores = new HashMap<>();
+    boolean hasCollided = false;
 
-    Asteroid[] asteroids; //the array of asteroids
-    int numAsteroids; //the number of asteroids currently in the array
     double astRadius, minAstVel, maxAstVel; //values used to create
     //asteroids
     int astNumHits, astNumSplit;
@@ -37,12 +40,11 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
     public void init() {
         setSize(500, 500);
         shots = new Vector<>(100);
-
-        numAsteroids = 0;
+        asteroids = new Vector<>(100);
         level = 0; //will be incremented to 1 when first level is set up
-        astRadius = 60; //values used to create the asteroids
+        astRadius = 40; //values used to create the asteroids
         minAstVel = .5;
-        maxAstVel = 5;
+        maxAstVel = 3;
         astNumHits = 3;
         astNumSplit = 2;
         endTime = 0;
@@ -54,12 +56,21 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         ventana.add(this);
         ventana.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         ventana.addKeyListener(this); //tell it to listen for KeyEvents
+        ventana.setResizable(false);
         thread = new Thread(this);
         thread.start();
     }
 
-    public void setUpNextLevel() { //start new level with one more asteroid
-        level++;
+    public void setUpNextLevel() {
+        shots.clear();
+        if(!hasCollided){
+            level++;
+            scores.put(level, currentScore);
+        } else {
+            asteroids.clear();
+            currentScore = 0;
+            hasCollided = false;
+        }
         // create a new, inactive ship centered on the screen
         // I like .35 for acceleration, .98 for velocityDecay, and
         // .1 for rotationalSpeed. They give the controls a nice feel.
@@ -72,14 +83,14 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         //the split asteroids are created first, then the original
         //one is deleted). The level number is equal to the
         //number of asteroids at it's start.
-        numAsteroids = 4 + 2*(level-1); // SIEMPRE se aparecen 4 y 2 cada nivel
-        asteroids = new Asteroid[numAsteroids *
-                (int) Math.pow(astNumSplit, astNumHits - 1) + 1];
-        //create asteroids in random spots on the screen
+        int numAsteroids = 4 + 2 * (level - 1); // SIEMPRE se aparecen 4 y 2 cada nivel
+        if (numAsteroids > 12) {
+            numAsteroids=12;
+        }
         for (int i = 0; i < numAsteroids; i++)
-            asteroids[i] = new Asteroid(Math.random() * dim.width,
+            asteroids.add(new Asteroid(Math.random() * dim.width,
                     Math.random() * dim.height, astRadius, minAstVel,
-                    maxAstVel, astNumHits, astNumSplit);
+                    maxAstVel, astNumHits, astNumSplit));
     }
 
     @Override
@@ -88,15 +99,16 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         g.setColor(Color.black);
         g.fillRect(0, 0, 500, 500);
 
-        for (Shot sht: shots) {
+        for (Shot sht : shots) {
             sht.draw(g);
         }
-        for (int i = 0; i < numAsteroids; i++)
-            asteroids[i].draw(g);
+        for (Asteroid ast : asteroids) {
+            ast.draw(g);
+        }
         ship.draw(g); //draw the ship
         g.setColor(Color.cyan); //Display level number in top left corner
         try {
-            g.setFont(Font.createFont(Font.TRUETYPE_FONT,new File("src/PressStart2P-Regular.ttf")).deriveFont(12.0F));
+            g.setFont(Font.createFont(Font.TRUETYPE_FONT, new File("src/PressStart2P-Regular.ttf")).deriveFont(12.0F));
         } catch (FontFormatException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -104,7 +116,12 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         }
         g.drawString("Level " + level, 20, 20);
         g.setColor(Color.green);
-        g.drawString("Score " + score, 20, 40);
+        long accumulatedScore = scores.values().stream().mapToInt(value -> value).sum();
+        if (accumulatedScore > 99990) {
+            accumulatedScore -= 99990;
+        }
+        g.drawString("LScore " + currentScore, 20, 40);
+        g.drawString("TScore " + accumulatedScore, 20, 60);
         ovni.draw(g);
     }
 
@@ -115,22 +132,22 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
             startTime = System.currentTimeMillis();
 
             //start next level when all asteroids are destroyed
-            if (numAsteroids <= 0)
+            if (hasCollided || level == 0 || asteroids.size() == 0)
                 setUpNextLevel();
 
             if (!paused) {
                 ship.move(dim.width, dim.height); // move the ship
                 //move shots and remove dead shots
-                for (Shot sht: new ArrayList<>(shots)) {
+                for (Shot sht : new ArrayList<>(shots)) {
                     sht.move(dim.width, dim.height);
-                    if(sht.getLifeLeft() <= 0) {
+                    if (sht.getLifeLeft() <= 0) {
                         shots.remove(sht);
                     }
                 }
 
-                if(ovni != null) {
+                if (ovni != null) {
                     ovni.move(dim.width, dim.height);
-                    if(ovni.canShoot()){
+                    if (ovni.canShoot()) {
                         shots.add(ovni.shoot());
                     }
                 }
@@ -141,9 +158,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
                     //add a shot on to the array
                     shots.add(ship.shoot());
                 }
-                if(score > 99990) {
-                    score -= 99990;
-                }
+
             }
 
             repaint();
@@ -156,59 +171,40 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         }
     }
 
-    private void deleteAsteroid(int index) {
-        //delete asteroid and shift ones after it up in the array
-        numAsteroids--;
-        for (int i = index; i < numAsteroids; i++)
-            asteroids[i] = asteroids[i + 1];
-        asteroids[numAsteroids] = null;
-    }
-
-    private void addAsteroid(Asteroid ast) {
-        //adds the asteroid passed in to the end of the array
-        asteroids[numAsteroids] = ast;
-        numAsteroids++;
-    }
-
     private void updateAsteroids() {
-        for (int i = 0; i < numAsteroids; i++) {
+        for (Asteroid ast : new ArrayList<>(asteroids)) {
             // move each asteroid
-            asteroids[i].move(dim.width, dim.height);
+            ast.move(dim.width, dim.height);
             //check for collisions with the ship, restart the
             //level if the ship gets hit
-            if (asteroids[i].shipCollision(ship)) {
-                level--; //restart this level
-                numAsteroids = 0;
+            if (ast.shipCollision(ship)) {
+                hasCollided = true;
                 return;
             }
             //check for collisions with any of the shots
             for (Shot sht : new ArrayList<>(shots)) {
-                if (asteroids[i].shotCollision(sht)) {
-                    switch (asteroids[i].hitsLeft){
+                if (ast.shotCollision(sht) && sht.shooter instanceof Ship) {
+                    switch (ast.hitsLeft) {
                         case 1:
-                            score += 100;
+                            currentScore += 100;
                             break;
                         case 2:
-                            score += 50;
+                            currentScore += 50;
                             break;
                         case 3:
-                            score += 20;
+                            currentScore += 20;
                             break;
                     }
                     //if the shot hit an asteroid, delete the shot
                     shots.remove(sht);
                     //split the asteroid up if needed
-                    if (asteroids[i].getHitsLeft() > 1) {
-                        for (int k = 0; k < asteroids[i].getNumSplit();
+                    asteroids.remove(ast);
+                    if (ast.getHitsLeft() > 1) {
+                        for (int k = 0; k < ast.getNumSplit();
                              k++)
-                            addAsteroid(
-                                    asteroids[i].createSplitAsteroid(
-                                            minAstVel, maxAstVel));
+                            asteroids.add(ast.createSplitAsteroid(
+                                    minAstVel, maxAstVel));
                     }
-                    //delete the original asteroid
-                    deleteAsteroid(i);
-                    i--; //don't skip asteroid shifted back into
-                    //the deleted asteroid's position
                 }
             }
         }
