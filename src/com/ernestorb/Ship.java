@@ -2,7 +2,7 @@ package com.ernestorb;
 
 import java.awt.*;
 
-public class Ship extends Positionable implements Drawable {
+public class Ship extends Positionable implements Drawable, Shooter {
     final double[] origXPts = {14, -10, -6, -10}, origYPts = {0, -8, 0, 8},
             origFlameXPts = {-6, -23, -6}, origFlameYPts = {-3, 0, 3};
     final int radius = 6;
@@ -133,16 +133,14 @@ public class Ship extends Positionable implements Drawable {
     }
 
     public boolean canShoot() {
-        if (shotDelayLeft > 0) //checks to see if the ship is ready to
-            return false; //shoot again yet or needs to wait longer
-        else
-            return true;
+        //checks to see if the ship is ready to
+        return shotDelayLeft <= 0; //shoot again yet or needs to wait longer
     }
 
     public Shot shoot() {
         shotDelayLeft = shotDelay; //set delay till next shot can be fired
         //a life of 40 makes the shot travel about the width of the
         //screen before disappearing
-        return new Shot(x, y, angle, xVelocity, yVelocity, 40);
+        return new Shot(x, y, angle, xVelocity, yVelocity, 40, this);
     }
 }

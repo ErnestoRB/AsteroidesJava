@@ -4,7 +4,7 @@ import java.awt.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class Ovni extends Positionable implements Drawable {
+public class Ovni extends Positionable implements Shooter,Drawable {
 
     private final double minVelocity = 1;
     private final double maxVelocity = 3;
@@ -61,10 +61,10 @@ public class Ovni extends Positionable implements Drawable {
         //a life of 40 makes the shot travel about the width of the
         //screen before disappearing
         angle++;
-        return new Shot(x, y, angle, xVelocity, yVelocity, 40);
+        return new Shot(x, y, angle, xVelocity, yVelocity, 40, this);
     }
     
-      public boolean canShoot() {
+    public boolean canShoot() {
         if (shotDelayLeft > 0) //checks to see if the ship is ready to
             return false; //shoot again yet or needs to wait longer
         else
