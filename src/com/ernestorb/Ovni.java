@@ -8,11 +8,11 @@ public class Ovni extends Positionable implements Shooter,Drawable {
 
     private final double minVelocity = 1;
     private final double maxVelocity = 3;
+    private short hitsLeft = 3;
     double angle;
     int shotDelayLeft, shotDelay;
 
     private class OvniVelocityChange implements Runnable {
-
         @Override
         public void run() {
             double vel= minVelocity + Math.random()*(maxVelocity-minVelocity),
@@ -26,10 +26,10 @@ public class Ovni extends Positionable implements Shooter,Drawable {
     public Ovni(double x, double y, int shotDelay) {
         super(x, y, 0, 0);
         this.angle = 0; //angulo de ejemplo
+        // esta línea genera un hilo cada 2s que genera una nueva velocidad (sentido y magnitud)
         new ScheduledThreadPoolExecutor(1).scheduleAtFixedRate(new OvniVelocityChange(), 0, 2000, TimeUnit.MILLISECONDS);
         this.shotDelay = shotDelay; // # of frames between shots
         shotDelayLeft = 0; // ready to shoot
-        // esta línea genera un hilo cada 2s que genera una nueva velocidad (sentido y magnitud)
     }
 
     @Override
@@ -64,7 +64,20 @@ public class Ovni extends Positionable implements Shooter,Drawable {
         angle++;
         return new Shot(x, y, angle, xVelocity, yVelocity, 40, this);
     }
-    
+
+    public boolean shotCollision(Shot shot) {
+        return Math.pow(20, 2) > Math.pow(shot.getX() - x, 2) +
+                Math.pow(shot.getY() - y, 2);
+    }
+
+    public void decreaseHitsLeft() {
+        hitsLeft--;
+    }
+
+    public short getHitsLeft() {
+        return hitsLeft;
+    }
+
     public boolean canShoot() {
         if (shotDelayLeft > 0) //checks to see if the ship is ready to
             return false; //shoot again yet or needs to wait longer

@@ -130,6 +130,11 @@ public class Ship extends Positionable implements Drawable, Shooter {
         this.turningRight = turningRight;
     }
 
+    public boolean shotCollision(Shot shot) {
+        return Math.pow(radius, 2) > Math.pow(shot.getX() - x, 2) +
+                Math.pow(shot.getY() - y, 2);
+    }
+
     public double getX() {
         return x;
     }
