@@ -34,6 +34,7 @@ public class Ovni extends Positionable implements Shooter,Drawable {
 
     @Override
     public void draw(Graphics g) {
+        g.setColor(Color.red);
         g.fillOval((int)x - 20, (int)y - 10, 40, 20);
         g.setColor(Color.cyan);
         g.fillArc((int)x - 10, (int)y - 19, 20, 20, 0, 180);

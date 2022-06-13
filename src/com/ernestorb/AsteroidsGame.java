@@ -122,6 +122,12 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         }
         g.drawString("LScore " + currentScore, 20, 40);
         g.drawString("TScore " + accumulatedScore, 20, 60);
+        if(ship.isShieldActive()) {
+            g.setColor(Color.green);
+        } else {
+            g.setColor(Color.red);
+        }
+        g.drawString("E", 20, 80);
         ovni.draw(g);
     }
 
@@ -225,22 +231,24 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         } else if (paused || !ship.isActive()) //if the game is
             return; //paused or ship is inactive, do not respond
             //to the controls except for enter to unpause
-        else if (e.getKeyCode() == KeyEvent.VK_UP)
+        else if (e.getKeyCode() == KeyEvent.VK_SHIFT && ship.canShieldBeActivated())
+             ship.updateLastShieldUsed();
+        else if (e.getKeyCode() == KeyEvent.VK_UP  || Character.toUpperCase(e.getKeyChar()) == 'W')
             ship.setAccelerating(true);
-        else if (e.getKeyCode() == KeyEvent.VK_LEFT)
+        else if (e.getKeyCode() == KeyEvent.VK_LEFT || Character.toUpperCase(e.getKeyChar()) == 'A')
             ship.setTurningLeft(true);
-        else if (e.getKeyCode() == KeyEvent.VK_RIGHT)
+        else if (e.getKeyCode() == KeyEvent.VK_RIGHT || Character.toUpperCase(e.getKeyChar()) == 'D')
             ship.setTurningRight(true);
         else if (e.getKeyCode() == KeyEvent.VK_CONTROL)
             shooting = true; //Start shooting if ctrl is pushed
     }
 
     public void keyReleased(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_UP)
+        if (e.getKeyCode() == KeyEvent.VK_UP || Character.toUpperCase(e.getKeyChar()) == 'W')
             ship.setAccelerating(false);
-        else if (e.getKeyCode() == KeyEvent.VK_LEFT)
+        else if (e.getKeyCode() == KeyEvent.VK_LEFT || Character.toUpperCase(e.getKeyChar()) == 'A')
             ship.setTurningLeft(false);
-        else if (e.getKeyCode() == KeyEvent.VK_RIGHT)
+        else if (e.getKeyCode() == KeyEvent.VK_RIGHT  || Character.toUpperCase(e.getKeyChar()) == 'D')
             ship.setTurningRight(false);
         else if (e.getKeyCode() == KeyEvent.VK_CONTROL)
             shooting = false;
