@@ -68,6 +68,7 @@ public class Asteroid extends Positionable implements Drawable {
         // then they have collided.
         // It does not check for collisions if the ship is not active
         // (player is waiting to start a new life or the game is paused).
+        if(ship.isShieldActive()) return false;
         return Math.pow(radius + ship.getRadius(), 2) >
                 Math.pow(ship.getX() - x, 2) + Math.pow(ship.getY() - y, 2)
                 && ship.isActive();

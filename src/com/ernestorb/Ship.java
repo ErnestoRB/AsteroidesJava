@@ -1,6 +1,7 @@
 package com.ernestorb;
 
 import java.awt.*;
+import java.util.Date;
 
 public class Ship extends Positionable implements Drawable, Shooter {
     final double[] origXPts = {14, -10, -6, -10}, origYPts = {0, -8, 0, 8},
@@ -12,6 +13,7 @@ public class Ship extends Positionable implements Drawable, Shooter {
     boolean turningLeft, turningRight, accelerating, active;
     int[] xPts, yPts, flameXPts, flameYPts;
     int shotDelay, shotDelayLeft;
+    long lastShieldUsed = 0;
 
     public Ship(double x, double y, double angle, double acceleration,
                 double velocityDecay, double rotationalSpeed,
@@ -68,6 +70,10 @@ public class Ship extends Positionable implements Drawable, Shooter {
         else // draw the ship dark gray if the game is paused
             g.setColor(Color.darkGray);
         g.fillPolygon(xPts, yPts, 4); // 4 is number of points
+        if (isShieldActive()) {
+            g.setColor(Color.red);
+            g.drawPolygon(xPts, yPts, 4); // 4 is number of points
+        }
     }
 
     public void move(int scrnWidth, int scrnHeight) {
@@ -100,6 +106,18 @@ public class Ship extends Positionable implements Drawable, Shooter {
             y -= scrnHeight;
     }
 
+    public boolean isShieldActive() {
+        return Math.abs(lastShieldUsed - new Date().getTime()) < 5000;
+    }
+
+    public void updateLastShieldUsed() {
+        this.lastShieldUsed = new Date().getTime();
+    }
+
+    public boolean canShieldBeActivated() {
+        return Math.abs(lastShieldUsed - new Date().getTime()) > 30000;
+    }
+
     public void setAccelerating(boolean accelerating) {
         this.accelerating = accelerating;
     }
@@ -110,6 +128,11 @@ public class Ship extends Positionable implements Drawable, Shooter {
 
     public void setTurningRight(boolean turningRight) {
         this.turningRight = turningRight;
+    }
+
+    public boolean shotCollision(Shot shot) {
+        return Math.pow(radius, 2) > Math.pow(shot.getX() - x, 2) +
+                Math.pow(shot.getY() - y, 2);
     }
 
     public double getX() {

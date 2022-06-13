@@ -25,11 +25,12 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
     boolean paused; // True if the game is paused. Enter is the pause key
     int numShots;
     boolean shooting;
-    Ovni ovni = new Ovni(100, 100, 25); //el tercer argumento indica el delay entre cada disparo de bala
+    boolean ovniAlreadyGenerated;
+    Ovni ovni;
     Vector<Shot> shots;
     Vector<Asteroid> asteroids;
     Map<Integer, Integer> scores = new HashMap<>();
-    boolean hasCollided = false;
+    boolean hasCollided;
 
     double astRadius, minAstVel, maxAstVel; //values used to create
     //asteroids
@@ -50,6 +51,8 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         endTime = 0;
         startTime = 0;
         framePeriod = 25;
+        hasCollided = false;
+        ovniAlreadyGenerated = false;
         dim = getSize();
         ventana = new JFrame("Asteroides");
         ventana.setSize(dim);
@@ -63,7 +66,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
 
     public void setUpNextLevel() {
         shots.clear();
-        if(!hasCollided){
+        if (!hasCollided) {
             level++;
             scores.put(level, currentScore);
         } else {
@@ -71,6 +74,8 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
             currentScore = 0;
             hasCollided = false;
         }
+        ovniAlreadyGenerated = false;
+        ovni = null;
         // create a new, inactive ship centered on the screen
         // I like .35 for acceleration, .98 for velocityDecay, and
         // .1 for rotationalSpeed. They give the controls a nice feel.
@@ -85,7 +90,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         //number of asteroids at it's start.
         int numAsteroids = 4 + 2 * (level - 1); // SIEMPRE se aparecen 4 y 2 cada nivel
         if (numAsteroids > 12) {
-            numAsteroids=12;
+            numAsteroids = 12;
         }
         for (int i = 0; i < numAsteroids; i++)
             asteroids.add(new Asteroid(Math.random() * dim.width,
@@ -109,9 +114,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         g.setColor(Color.cyan); //Display level number in top left corner
         try {
             g.setFont(Font.createFont(Font.TRUETYPE_FONT, new File("src/PressStart2P-Regular.ttf")).deriveFont(12.0F));
-        } catch (FontFormatException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (FontFormatException | IOException e) {
             e.printStackTrace();
         }
         g.drawString("Level " + level, 20, 20);
@@ -122,7 +125,14 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         }
         g.drawString("LScore " + currentScore, 20, 40);
         g.drawString("TScore " + accumulatedScore, 20, 60);
-        ovni.draw(g);
+        g.drawString("Activar escudo (SHIFT)", 20, 480);
+        if (ship.isShieldActive()) {
+            g.setColor(Color.green);
+            g.drawString("E", 20, 80);
+        }
+
+        if(ovni != null)
+            ovni.draw(g);
     }
 
 
@@ -132,11 +142,34 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
             startTime = System.currentTimeMillis();
 
             //start next level when all asteroids are destroyed
-            if (hasCollided || level == 0 || asteroids.size() == 0)
+            if (hasCollided || level == 0 || (asteroids.size() == 0 && ovni == null))
                 setUpNextLevel();
 
             if (!paused) {
                 ship.move(dim.width, dim.height); // move the ship
+                if (ovni != null) {
+                    ovni.move(dim.width, dim.height);
+                    if (ovni.canShoot()) {
+                        shots.add(ovni.shoot());
+                    }
+                    for (Shot sht : new ArrayList<>(shots)) {
+                        if(sht.shooter == ship && ovni.shotCollision(sht)){
+                            ovni.decreaseHitsLeft();
+                            shots.remove(sht);
+                        }
+                    }
+                    if (ovni.getHitsLeft() == 0) {
+                        ovni = null;
+                    }
+                }
+
+                for (Shot sht : new ArrayList<>(shots)) {
+                    if(sht.shooter == ovni && ship.shotCollision(sht)){
+                        shots.remove(sht);
+                        hasCollided = true;
+                    }
+                }
+
                 //move shots and remove dead shots
                 for (Shot sht : new ArrayList<>(shots)) {
                     sht.move(dim.width, dim.height);
@@ -144,15 +177,13 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
                         shots.remove(sht);
                     }
                 }
-
-                if (ovni != null) {
-                    ovni.move(dim.width, dim.height);
-                    if (ovni.canShoot()) {
-                        shots.add(ovni.shoot());
-                    }
-                }
                 //move asteroids and check for collisions
                 updateAsteroids();
+
+                if (!ovniAlreadyGenerated && asteroids.stream().filter(asteroid -> asteroid.hitsLeft == 3).count() == 3) {
+                    ovni = new Ovni(Math.random(), 100, 25); //el tercer argumento indica el delay entre cada disparo de bala
+                    ovniAlreadyGenerated = true;
+                }
 
                 if (shooting && ship.canShoot()) {
                     //add a shot on to the array
@@ -225,22 +256,24 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         } else if (paused || !ship.isActive()) //if the game is
             return; //paused or ship is inactive, do not respond
             //to the controls except for enter to unpause
-        else if (e.getKeyCode() == KeyEvent.VK_UP)
+        else if (e.getKeyCode() == KeyEvent.VK_SHIFT && ship.canShieldBeActivated())
+            ship.updateLastShieldUsed();
+        else if (e.getKeyCode() == KeyEvent.VK_UP || Character.toUpperCase(e.getKeyChar()) == 'W')
             ship.setAccelerating(true);
-        else if (e.getKeyCode() == KeyEvent.VK_LEFT)
+        else if (e.getKeyCode() == KeyEvent.VK_LEFT || Character.toUpperCase(e.getKeyChar()) == 'A')
             ship.setTurningLeft(true);
-        else if (e.getKeyCode() == KeyEvent.VK_RIGHT)
+        else if (e.getKeyCode() == KeyEvent.VK_RIGHT || Character.toUpperCase(e.getKeyChar()) == 'D')
             ship.setTurningRight(true);
         else if (e.getKeyCode() == KeyEvent.VK_CONTROL)
             shooting = true; //Start shooting if ctrl is pushed
     }
 
     public void keyReleased(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_UP)
+        if (e.getKeyCode() == KeyEvent.VK_UP || Character.toUpperCase(e.getKeyChar()) == 'W')
             ship.setAccelerating(false);
-        else if (e.getKeyCode() == KeyEvent.VK_LEFT)
+        else if (e.getKeyCode() == KeyEvent.VK_LEFT || Character.toUpperCase(e.getKeyChar()) == 'A')
             ship.setTurningLeft(false);
-        else if (e.getKeyCode() == KeyEvent.VK_RIGHT)
+        else if (e.getKeyCode() == KeyEvent.VK_RIGHT || Character.toUpperCase(e.getKeyChar()) == 'D')
             ship.setTurningRight(false);
         else if (e.getKeyCode() == KeyEvent.VK_CONTROL)
             shooting = false;
