@@ -125,7 +125,8 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         }
         g.drawString("LScore " + currentScore, 20, 40);
         g.drawString("TScore " + accumulatedScore, 20, 60);
-        g.drawString("Activar escudo (SHIFT)", 20, 480);
+        g.drawString("Activar escudo (SHIFT)", 20, 440);
+        g.drawString("Hiperespacio (Z)", 20, 420);
         if (ship.isShieldActive()) {
             g.setColor(Color.green);
             g.drawString("E", 20, 80);
@@ -189,6 +190,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
                     //add a shot on to the array
                     shots.add(ship.shoot());
                 }
+                
 
             }
 
@@ -266,6 +268,10 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
             ship.setTurningRight(true);
         else if (e.getKeyCode() == KeyEvent.VK_CONTROL)
             shooting = true; //Start shooting if ctrl is pushed
+        else if (e.getKeyCode() == KeyEvent.VK_Z){
+            ship.setCanTeleport(true);
+        }
+            
     }
 
     public void keyReleased(KeyEvent e) {
@@ -277,6 +283,11 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
             ship.setTurningRight(false);
         else if (e.getKeyCode() == KeyEvent.VK_CONTROL)
             shooting = false;
+        else if (e.getKeyCode() == KeyEvent.VK_Z){
+            ship.setCanTeleport(false);
+            ship.setTeleported(false);
+        }
+            
     }
 
     public void keyTyped(KeyEvent e) {

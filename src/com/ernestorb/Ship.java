@@ -10,10 +10,11 @@ public class Ship extends Positionable implements Drawable, Shooter {
 
     double angle, acceleration,
             velocityDecay, rotationalSpeed;
-    boolean turningLeft, turningRight, accelerating, active;
+    boolean turningLeft, turningRight, accelerating, active, canTeleport;
     int[] xPts, yPts, flameXPts, flameYPts;
     int shotDelay, shotDelayLeft;
     long lastShieldUsed = 0;
+    boolean teleported = false;
 
     public Ship(double x, double y, double angle, double acceleration,
                 double velocityDecay, double rotationalSpeed,
@@ -28,6 +29,7 @@ public class Ship extends Positionable implements Drawable, Shooter {
         this.rotationalSpeed = rotationalSpeed;
         xVelocity = 0; // not moving
         yVelocity = 0;
+        canTeleport = false;
         turningLeft = false; // not turning
         turningRight = false;
         accelerating = false; // not accelerating
@@ -77,6 +79,11 @@ public class Ship extends Positionable implements Drawable, Shooter {
     }
 
     public void move(int scrnWidth, int scrnHeight) {
+        if(canTeleport & !teleported){
+            x = (int)(Math.random() * 500 + 1);
+            y = (int)(Math.random() * 500 + 1);
+            teleported = true;
+        }
         if (shotDelayLeft > 0) //move() is called every frame that the game
             shotDelayLeft--; //is run; this ticks down the shot delay
         if (turningLeft) //this is backwards from typical polar coodinates
@@ -117,7 +124,7 @@ public class Ship extends Positionable implements Drawable, Shooter {
     public boolean canShieldBeActivated() {
         return Math.abs(lastShieldUsed - new Date().getTime()) > 30000;
     }
-
+    
     public void setAccelerating(boolean accelerating) {
         this.accelerating = accelerating;
     }
@@ -129,10 +136,22 @@ public class Ship extends Positionable implements Drawable, Shooter {
     public void setTurningRight(boolean turningRight) {
         this.turningRight = turningRight;
     }
+    
+    public void setTeleported(boolean teleported){
+        this.teleported = teleported;
+    }
 
     public boolean shotCollision(Shot shot) {
         return Math.pow(radius, 2) > Math.pow(shot.getX() - x, 2) +
                 Math.pow(shot.getY() - y, 2);
+    }
+
+    public void setCanTeleport(boolean canTeleport) {
+        this.canTeleport = canTeleport;
+    }
+
+    public boolean getTeleported(){
+        return teleported;
     }
 
     public double getX() {
