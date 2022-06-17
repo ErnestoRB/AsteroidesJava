@@ -128,10 +128,10 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         g.drawString("Activar escudo (SHIFT)", 20, 440);
         g.drawString("Hiperespacio (Z)", 20, 420);
         if (ship.isShieldActive()) {
+            g.setColor(Color.red);
+            g.drawString("Escudo activo", 20, 80);
             g.setColor(Color.green);
-            g.drawString("E", 20, 80);
         }
-
         if(ovni != null)
             ovni.draw(g);
     }
@@ -160,6 +160,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
                         }
                     }
                     if (ovni.getHitsLeft() == 0) {
+                        currentScore += 100;
                         ovni = null;
                     }
                 }
