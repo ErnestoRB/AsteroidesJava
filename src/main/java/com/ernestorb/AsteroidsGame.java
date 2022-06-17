@@ -113,7 +113,7 @@ public class AsteroidsGame extends JPanel implements Runnable, KeyListener {
         ship.draw(g); //draw the ship
         g.setColor(Color.cyan); //Display level number in top left corner
         try {
-            g.setFont(Font.createFont(Font.TRUETYPE_FONT, new File("src/PressStart2P-Regular.ttf")).deriveFont(12.0F));
+            g.setFont(Font.createFont(Font.TRUETYPE_FONT, this.getClass().getClassLoader().getResourceAsStream("PressStart2P-Regular.ttf")).deriveFont(12.0F));
         } catch (FontFormatException | IOException e) {
             e.printStackTrace();
         }
